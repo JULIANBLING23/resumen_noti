@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumidor de Noticias</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        .range-value {
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .output-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+        }
+
+        .summary-box {
+            background: #f8f9fa;
+            border-left: 5px solid #3498db;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #3498db;
+            font-style: italic;
+            margin: 20px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 Resumidor de Noticias</h1>
+            <p>Convierte artículos largos en resúmenes coherentes y concisos</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <h2>Texto de la Noticia</h2>
+                <textarea 
+                    id="newsInput" 
+                    placeholder="Pega aquí el texto de la noticia que deseas resumir..."
+                ></textarea>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="summaryLength">Longitud del resumen:</label>
+                        <input 
+                            type="range" 
+                            id="summaryLength" 
+                            min="1" 
+                            max="5" 
+                            value="3"
+                        >
+                        <span class="range-value" id="lengthValue">3</span>
+                    </div>
+                    
+                    <button onclick="summarizeNews()">
+                        ✨ Generar Resumen
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                Procesando noticia...
+            </div>
+
+            <div class="output-section">
+                <h2>Resumen Generado</h2>
+                <div id="summaryOutput" class="empty-state">
+                    El resumen aparecerá aquí una vez que proceses una noticia
+                </div>
+                
+                <div id="statsContainer" class="stats" style="display: none;">
+                    <div class="stat-card">
+                        <span class="stat-value" id="originalWords">-</span>
+                        <span class="stat-label">Palabras originales</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="summaryWords">-</span>
+                        <span class="stat-label">Palabras en resumen</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="compressionRatio">-</span>
+                        <span class="stat-label">% de compresión</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="sentenceCount">-</span>
+                        <span class="stat-label">Oraciones seleccionadas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Algoritmo de Resumido de Noticias
+        class NewsSummarizer {
+            constructor() {
+                this.stopWords = new Set([
+                    'el', 'la', 'de', 'que', 'y', 'a', 'en', 'un', 'es', 'se', 
+                    'no', 'te', 'lo', 'le', 'da', 'su', 'por', 'son', 'con', 
+                    'para', 'al', 'del', 'los', 'las', 'una', 'pero', 'sus', 
+                    'fue', 'ser', 'han', 'ha', 'muy', 'más', 'este', 'esta', 
+                    'está', 'como', 'sin', 'sobre', 'hay', 'todo', 'ya', 'si',
+                    'sido', 'hasta', 'dos', 'me', 'entre', 'cuando', 'él', 'ella'
+                ]);
+            }
+
+            // Limpia y tokeniza el texto
+            tokenize(text) {
+                return text.toLowerCase()
+                    .replace(/[^\w\sáéíóúüñ]/g, ' ')
+                    .split(/\s+/)
+                    .filter(word => word.length > 2 && !this.stopWords.has(word));
+            }
+
+            // Calcula la frecuencia de palabras
+            calculateWordFrequency(words) {
+                const frequency = {};
+                words.forEach(word => {
+                    frequency[word] = (frequency[word] || 0) + 1;
+                });
+                return frequency;
+            }
+
+            // Divide el texto en oraciones
+            getSentences(text) {
+                return text.split(/[.!?]+/)
+                    .map(sentence => sentence.trim())
+                    .filter(sentence => sentence.length > 20);
+            }
+
+            // Calcula el puntaje de cada oración
+            scoreSentences(sentences, wordFrequency) {
+                return sentences.map((sentence, index) => {
+                    const words = this.tokenize(sentence);
+                    let score = 0;
+                    
+                    // Puntaje basado en frecuencia de palabras
+                    words.forEach(word => {
+                        score += wordFrequency[word] || 0;
+                    });
+                    
+                    // Normalizar por longitud de la oración
+                    score = words.length > 0 ? score / words.length : 0;
+                    
+                    // Bonus para oraciones al principio (suelen ser más importantes)
+                    if (index < sentences.length * 0.3) {
+                        score *= 1.2;
+                    }
+                    
+                    // Bonus para oraciones que contienen números o fechas
+                    if (/\d+/.test(sentence)) {
+                        score *= 1.1;
+                    }
+                    
+                    // Penalty para oraciones muy cortas o muy largas
+                    const wordCount = words.length;
+                    if (wordCount < 5 || wordCount > 40) {
+                        score *= 0.8;
+                    }
+
+                    return {
+                        sentence: sentence,
+                        score: score,
+                        index: index,
+                        wordCount: wordCount
+                    };
+                });
+            }
+
+            // Método principal de resumido
+            summarize(text, maxSentences = 3) {
+                if (!text || text.trim().length === 0) {
+                    return {
+                        summary: '',
+                        originalWordCount: 0,
+                        summaryWordCount: 0,
+                        compressionRatio: 0,
+                        selectedSentences: 0
+                    };
+                }
+
+                // Preparar datos
+                const sentences = this.getSentences(text);
+                const words = this.tokenize(text);
+                const wordFrequency = this.calculateWordFrequency(words);
+                
+                // Calcular puntajes
+                const scoredSentences = this.scoreSentences(sentences, wordFrequency);
+                
+                // Seleccionar las mejores oraciones
+                const selectedSentences = scoredSentences
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, Math.min(maxSentences, sentences.length))
+                    .sort((a, b) => a.index - b.index); // Mantener orden original
+                
+                // Generar resumen
+                const summary = selectedSentences
+                    .map(item => item.sentence)
+                    .join('. ') + '.';
+                
+                // Calcular estadísticas
+                const originalWordCount = text.split(/\s+/).length;
+                const summaryWordCount = summary.split(/\s+/).length;
+                const compressionRatio = Math.round(((originalWordCount - summaryWordCount) / originalWordCount) * 100);
+                
+                return {
+                    summary: summary,
+                    originalWordCount: originalWordCount,
+                    summaryWordCount: summaryWordCount,
+                    compressionRatio: compressionRatio,
+                    selectedSentences: selectedSentences.length
+                };
+            }
+        }
+
+        // Instancia del resumidor
+        const summarizer = new NewsSummarizer();
+
+        // Control del slider
+        const lengthSlider = document.getElementById('summaryLength');
+        const lengthValue = document.getElementById('lengthValue');
+
+        lengthSlider.addEventListener('input', function() {
+            lengthValue.textContent = this.value;
+        });
+
+        // Función principal de resumido
+        async function summarizeNews() {
+            const input = document.getElementById('newsInput').value.trim();
+            const loading = document.getElementById('loading');
+            const output = document.getElementById('summaryOutput');
+            const statsContainer = document.getElementById('statsContainer');
+            const maxSentences = parseInt(lengthSlider.value);
+
+            if (!input) {
+                alert('Por favor, ingresa el texto de una noticia');
+                return;
+            }
+
+            // Mostrar loading
+            loading.style.display = 'block';
+            statsContainer.style.display = 'none';
+
+            // Simular un pequeño delay para mejor UX
+            setTimeout(() => {
+                try {
+                    const result = summarizer.summarize(input, maxSentences);
+                    
+                    if (result.summary) {
+                        // Mostrar resumen
+                        output.innerHTML = `<div class="summary-box">${result.summary}</div>`;
+                        
+                        // Actualizar estadísticas
+                        document.getElementById('originalWords').textContent = result.originalWordCount;
+                        document.getElementById('summaryWords').textContent = result.summaryWordCount;
+                        document.getElementById('compressionRatio').textContent = result.compressionRatio + '%';
+                        document.getElementById('sentenceCount').textContent = result.selectedSentences;
+                        
+                        statsContainer.style.display = 'grid';
+                    } else {
+                        output.innerHTML = '<div class="empty-state">No se pudo generar un resumen. Verifica que el texto sea suficientemente largo.</div>';
+                    }
+                } catch (error) {
+                    output.innerHTML = '<div class="empty-state">Error al procesar el texto. Inténtalo de nuevo.</div>';
+                    console.error('Error:', error);
+                }
+                
+                loading.style.display = 'none';
+            }, 800);
+        }
+
+        // Permitir resumir con Enter + Ctrl
+        document.getElementById('newsInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                summarizeNews();
+            }
+        });
+
+        // Texto de ejemplo para demo
+        document.addEventListener('DOMContentLoaded', function() {
+            const exampleText = `La inteligencia artificial está transformando radicalmente múltiples sectores de la economía global. Las empresas de tecnología están invirtiendo billones de dólares en el desarrollo de sistemas de IA más avanzados. Los expertos predicen que para 2030, la inteligencia artificial podría contribuir hasta 15.7 billones de dólares al PIB mundial. Sin embargo, también surgen preocupaciones sobre el impacto en el empleo tradicional. Muchos trabajos podrían ser automatizados, lo que requiere una reconversión masiva de la fuerza laboral. Los gobiernos están comenzando a desarrollar marcos regulatorios para gestionar esta transición tecnológica. La educación en habilidades digitales se vuelve crucial para preparar a las futuras generaciones. Las oportunidades son enormes, pero también los desafíos que debemos enfrentar como sociedad.`;
+            
+            document.getElementById('newsInput').placeholder += '\n\nEjemplo disponible: Ctrl+Click aquí para cargar texto de prueba';
+            
+            document.getElementById('newsInput').addEventListener('click', function(e) {
+                if (e.ctrlKey && !this.value) {
+                    this.value = exampleText;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
