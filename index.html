@@ -467,7 +467,12 @@
                 summarizeNews();
             }
         });
-
+      document.addEventListener('contextmenu', event => event.preventDefault());
+  document.onkeydown = function(e) {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key === "U")) {
+      return false;
+    }
+  };
         // Texto de ejemplo para demo
         document.addEventListener('DOMContentLoaded', function() {
             const exampleText = `La inteligencia artificial está transformando radicalmente múltiples sectores de la economía global. Las empresas de tecnología están invirtiendo billones de dólares en el desarrollo de sistemas de IA más avanzados. Los expertos predicen que para 2030, la inteligencia artificial podría contribuir hasta 15.7 billones de dólares al PIB mundial. Sin embargo, también surgen preocupaciones sobre el impacto en el empleo tradicional. Muchos trabajos podrían ser automatizados, lo que requiere una reconversión masiva de la fuerza laboral. Los gobiernos están comenzando a desarrollar marcos regulatorios para gestionar esta transición tecnológica. La educación en habilidades digitales se vuelve crucial para preparar a las futuras generaciones. Las oportunidades son enormes, pero también los desafíos que debemos enfrentar como sociedad.`;
